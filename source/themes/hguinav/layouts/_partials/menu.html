@@ -1,0 +1,90 @@
+{{- /*
+Renders a menu for the given menu ID.
+
+@context {page} page The current page.
+@context {string} menuID The menu ID.
+@context {string} format the format to use. Default is default.
+
+@example: {{ partial "menu.html" (dict "menuID" "main" "page" .) }}
+*/ -}}
+{{- $formats := slice "default" "noheading" }}
+{{- $format := "default" }}
+{{- $label := T "mainmenu" }}
+{{- with .format }}
+{{- $format = lower . }}
+{{- end }}
+{{- if not (in $formats $format) }}
+{{- errorf "Invalid menu format %s. Valid formats are %s" $format (delimit $formats ", ") }}
+{{- end }}
+{{- with .label }}
+{{- $label = . }}
+{{- end }}
+{{- $page := .page }}
+{{- $menuID := .menuID }}
+{{- with index site.Menus $menuID }}
+{{- partial (printf "inline/menu/format/%s" $format) (dict "page" $page "menuEntries" . "label" $label) }}
+{{- end }}
+{{- define "_partials/inline/menu/format/default" }}
+{{- $page := .page }}
+{{- $label := .label }}
+<nav id="navigation" role="navigation" aria-label="{{ $label }}">
+<h2>{{ $label }}</h2>
+<ul style="list-style-type:none;">
+{{- partial "inline/menu/walk.html" (dict "page" $page "menuEntries" .menuEntries) }}
+</ul>
+</nav>
+{{- end }}
+
+{{- define "_partials/inline/menu/format/noheading" }}
+{{- $page := .page }}
+<ul style="list-style-type:none;">
+{{- partial "inline/menu/walk.html" (dict "page" $page "menuEntries" .menuEntries) }}
+</ul>
+{{- end }}
+
+{{- define "_partials/inline/menu/walk.html" }}
+{{- $page := .page }}
+{{- range .menuEntries }}
+{{- $fpage := .Page }}
+{{- if .Page }}
+{{- with site.GetPage .Page.Path }}
+{{- $fpage = . }}
+{{- end }}
+{{- end }}
+{{- $url := .URL }}
+{{- with $fpage }}
+{{- $url = .RelPermalink }}
+{{- end }}
+{{- $attrs := dict }}
+{{- if .Params.attributes }}
+{{- /*
+{{- range $ak, av := .Params.attributes }}
+*/ -}}
+{{- $attrs = merge $attrs .Params.attributes }}
+{{- end }}
+{{- $attrs = merge $attrs (dict "href" $url) }}
+{{- if $page.IsMenuCurrent .Menu . }}
+{{- $attrs = merge $attrs (dict "class" "active" "aria-current" "page") }}
+{{- else if $page.HasMenuCurrent .Menu .}}
+{{- $attrs = merge $attrs (dict "class" "ancestor" "aria-current" "true") }}
+{{- end }}
+{{- $name := .Name }}
+{{- with .Identifier }}
+{{- with T . }}
+{{- $name = . }}
+{{- end }}
+{{- end }}
+<li><a
+{{- range $k, $v := $attrs -}}
+{{- with $v -}}
+{{- printf " %s=%q" $k $v | safeHTMLAttr -}}
+{{- end -}}
+{{- end -}}>{{ $name }}</a>
+{{- with .Children }}
+<ul style="list-style-type:none;">
+{{- partial "inline/menu/walk.html" (dict "page" $page "menuEntries" .) }}
+</ul>
+{{- end }}
+</li>
+{{- end }}
+{{- end }}

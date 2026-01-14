@@ -1,0 +1,43 @@
+{{- define "title" -}}
+{{- $docsect := .FirstSection -}}
+{{- $current := . -}}
+{{- $titles := slice $current.Title -}}
+{{- if and $docsect (not ($docsect.Eq $current) ) -}}
+{{- $titles = $titles | append $docsect.Title -}}
+{{- end -}}
+{{- partial "title.html" (dict "titles" $titles) -}}
+{{- end -}}
+{{- define "extraheader" }}
+{{- $current := . -}}
+{{- $docsect := .FirstSection -}}
+{{- $section := cond .IsSection . .CurrentSection -}}
+{{- $sectionst := or $docsect.Params.label.sections "Sections" }}
+{{- $pagest := or $docsect.Params.label.pages "Pages" }}
+{{- if $section }}
+{{- $sort := or $section.Params.sort_by "" }}
+<nav role="navigation" aria-label="{{ $docsect.Title }}">
+<h2>{{ $docsect.Title }}</h2>
+{{- if $section.RegularPages }}
+<h3>{{ $pagest }}</h3>
+<ul style="list-style-type:none;">
+{{- range (partial "sort.html" (dict "sorts" $section.RegularPages "sort_by" $sort)) }}
+<li><a href="{{ .RelPermalink }}" {{ if eq .RelPermalink $current.RelPermalink }}aria-current="page"{{ end }}>{{ .LinkTitle }}</a></li>
+{{- end }}
+</ul>
+{{- end }}
+{{- if $section.Sections }}
+<h3>{{ $sectionst }}</h3>
+<ul style="list-style-type:none;">
+{{- range $sub := (partial "sort.html" (dict "sorts" $section.Sections "sort_by" $sort)) }}
+<li><a href="{{ .RelPermalink }}" {{ if eq .RelPermalink $current.RelPermalink }}aria-current="page"{{ end }}>{{ .LinkTitle }}</a></li>
+{{- end }}
+</ul>
+{{- end }}
+</nav>
+{{- end }}
+{{- end }}
+{{- define "main" }}
+{{ (partial "content.html" (dict "value" .Content "page" . )) | safeHTML }}
+
+{{- partial "related.html" (dict "page" .) }}
+{{- end }}

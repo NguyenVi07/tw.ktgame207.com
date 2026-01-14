@@ -1,0 +1,9 @@
+{{- define "main" }}
+<h1 class="search-title">{{ .Title }}</h1>
+<input type="text" id="search-input" placeholder="{{ .Params.placeholder | default "Search this site" }}" oninput="showSearchResults()">
+<br>
+<nav aria-label="search results">
+<p id="searchnum"></p>
+<div id="searchres"></div>
+</nav>
+{{- end }}

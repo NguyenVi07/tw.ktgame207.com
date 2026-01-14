@@ -1,0 +1,66 @@
+{{- $sformats := slice "pagefind" "lunr" }}
+{{- $sformat := .Site.Params.search.format }}
+{{- if not (in $sformats $sformat) }}
+  {{- errorf "Invalid search format %s. Valid formats are %s" $sformat (delimit $sformats " ") }}
+{{- end -}}
+{{- $searchon := false }}
+{{- if and .Site.Params.search.enable (.Params.search | default .Site.Params.search.default_enable) }}
+  {{- $searchon = true }}
+{{- end }}
+{{- $nojs := .Site.Params.no_js | default false }}
+{{- with .Params.no_js }}
+  {{- $nojs = . }}
+{{- end -}}
+<!DOCTYPE html>
+<html lang="{{ site.Language.LanguageCode }}">
+<head>
+{{ partial "head.html" . }}
+{{ partial "extrahead.html" . }}
+<title>{{- block "title" . -}}{{- partial "title.html" (dict "titles" (slice .Title) ) -}}{{- end -}}</title>
+{{- if (and (eq $searchon true) (eq .Site.Params.search.format "lunr") (eq $nojs false)) }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lunr.js/2.0.2/lunr.js"></script>
+{{- end }}
+</head>
+<body>
+{{- block "beforeheader" . }}
+{{- end }}
+{{- partial "header.html" . }}
+{{- partial "nav.html" . }}
+{{- block "extraheader" . }}
+{{- end }}
+{{- block "cextraheader" . }}
+{{- end }}
+<main id="mainc"{{ if (and (eq $sformat "pagefind") (eq $searchon true)) }} data-pagefind-body{{ end }}>
+{{- block "main" . }}
+{{- end }}
+</main>
+<div id="hgfooter">
+{{ partial "footer.html" .}}
+</div>
+{{ partial "extrafoot.html" . }}
+{{- if (eq $nojs false) }}
+<script src="{{absURL "scripts/copy.js"}}"></script>
+{{- if (and (eq $searchon true) (eq .Site.Params.search.format "lunr")) }}
+{{- $searchr := resources.Get "scripts/search.js" }}
+<script src="{{ $searchr.RelPermalink }}"></script>
+{{- else if (and (eq $searchon true) (eq .Site.Params.search.format "pagefind")) }}
+<script>
+window.addEventListener('DOMContentLoaded', (event) => {
+  new PagefindUI({ element: "#sitesearch", showSubResults: true });
+});
+</script>
+{{- end }}
+{{- end }}
+{{- block "extrafooter" . }}
+{{- end }}
+{{- $dsud := .Site.Params.display_site_lastmod | default false }}
+{{- if $dsud }}
+{{- if not $nojs }}
+{{- $slmd := printf "<script>document.write(ts_to_readable_time(get_timestamp(%q), false, %q, false));</script>" (partial "tformat.html" .Site.Lastmod) "" }}
+<p>{{ T "site_lastmod" $slmd | safeHTML }}</p>
+{{- else }}
+<p>{{ partial "content.html" (dict "page" .Site "value" "%updated%") }}</p>
+{{- end }}
+{{- end }}
+</body>
+</html>

@@ -1,0 +1,18 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{{- $nojs := .Site.Params.no_js | default false }}
+{{- with .Params.no_js }}
+{{- $nojs = . }}
+{{- end -}}
+{{- if eq $nojs false }}
+<script src="{{absURL "scripts/theme.js"}}"></script>
+{{- end }}
+<link rel="stylesheet" href="{{ absURL "css/theme.css" }}">
+{{- if not (eq .Kind "404") }}
+<meta name="robots" content="index, follow">
+{{- else }}
+<meta name="robots" content="noindex, nofollow">
+{{- end }}
+{{- partial "seo.html" . }}
+<link rel="canonical" href="{{ .Permalink | safeURL }}">
+<link rel="icon" href="{{ absURL "favicon.ico" | safeURL }}" type="image/x-icon">

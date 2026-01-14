@@ -1,0 +1,22 @@
+{{- define "title" -}}
+  {{- partial "title.html" (dict "titles" (slice .Title .Data.Singular) ) -}}
+{{- end -}}
+{{ define "main" }}
+<h1>{{ .Title }}</h1>
+{{- with .Params.role }}
+<p>Role: {{ . }}</p>
+{{- end }}
+{{- with .Params.website }}
+<p>Personal website:<span><a href="{{ . }}">{{ . }}</a></span></p>
+{{- end }}
+{{- if .Content }}
+<p>Byo:<span>{{ partial "content.html" (dict "value" .Content "page" . ) | safeHTML}}</span></p>
+{{- end }}
+{{- if .Pages }}
+{{- $paginator := partial "paginate.html" (dict "page" . "sort_by" "Lastmod" "reverse" true) }}
+<nav aria-label="Posts">
+{{- partial "listpost.html" $paginator }}
+{{ partial "pagination.html" (dict "paginator" $paginator) }}
+</nav>
+{{- end }}
+{{- end }}
